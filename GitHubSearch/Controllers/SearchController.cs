@@ -112,8 +112,9 @@ namespace GitHubSearch.Controllers
             if (id == null)
                 return RedirectToAction("List", "Search");
 
-            if (searchDAO.Delete((int)id))
+            if (searchDAO.Delete((int)id)) {
                 return RedirectToAction("List", "Search");
+            }
             else
                 return View(searchDAO.Get((int)id));
         }
