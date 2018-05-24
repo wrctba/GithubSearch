@@ -1,0 +1,50 @@
+﻿@model GitHubSearch.Models.Search
+
+<h2>Search Detail</h2>
+<div align="center">
+
+    <div class="row"><br /></div>
+    <table class="table">
+        <tr>
+            <th>Id</th>
+            <th>Name</th>
+            <th>Owner</th>
+            <th>Language</th>
+            <th>Description</th>
+        </tr>
+        @if (Model.Items != null && Model.Items.Count > 0)
+        {
+            foreach (var item in Model.Items)
+            {
+                <tr>
+                    <td>
+                        @Html.ActionLink(item.Id.ToString(), "Item", new { id = item.Id })
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Name)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Owner)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Language)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Description)
+                    </td>
+                </tr>
+            }
+        }
+    </table>
+
+</div>
+@using (Html.BeginForm("Delete", "Search", new { Model.Id}))
+{
+    @Html.AntiForgeryToken()
+
+<div class="form-actions no-color">
+    <input type="submit" value="Delete" class="btn btn-default" /> |
+    @Html.ActionLink("Back to List", null, null, null, new { href = Request.UrlReferrer })
+</div>
+}
+

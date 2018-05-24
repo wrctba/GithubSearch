@@ -1,0 +1,56 @@
+﻿@model PagedList.IPagedList<GitHubSearch.Models.Search>
+@using PagedList.Mvc;
+<link href="~/Content/PagedList.css" rel="stylesheet" type="text/css" />
+
+<h2>Search List</h2>
+<table class="table">
+    <tr>
+        <th>
+            Date
+        </th>
+        <th>
+            ASP
+        </th>
+        <th>
+            Java
+        </th>
+        <th>
+            Python
+        </th>
+        <th>
+            PHP
+        </th>
+        <th>
+            C
+        </th>
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                @Html.ActionLink(item.Date.ToString(), "Detail", new { id = item.Id })
+            </td>
+            <td>
+                @Html.CheckBoxFor(modelItem => item.Asp, new { disabled = "disabled" })
+            </td>
+            <td>
+                @Html.CheckBoxFor(modelItem => item.Java, new { disabled = "disabled" })
+            </td>
+            <td>
+                @Html.CheckBoxFor(modelItem => item.Python, new { disabled = "disabled" })
+            </td>
+            <td>
+                @Html.CheckBoxFor(modelItem => item.Php, new { disabled = "disabled" })
+            </td>
+            <td>
+                @Html.CheckBoxFor(modelItem => item.C, new { disabled = "disabled" })
+            </td>
+        </tr>
+    }
+
+</table>
+<br />
+Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount
+
+@Html.PagedListPager(Model, page => Url.Action("List", "Search", new { page }))

@@ -1,0 +1,42 @@
+﻿@model GitHubSearch.Models.Item
+
+
+<h2>Item Detail</h2>
+<div align="center">
+    <table class="table">
+        <tr>
+            <th>Property</th>
+            <th>Value</th>
+        </tr>
+        @{
+            Newtonsoft.Json.Linq.JObject my_obj = Newtonsoft.Json.JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JObject>(Model.Details);
+            foreach (KeyValuePair<string, Newtonsoft.Json.Linq.JToken> sub_obj in (Newtonsoft.Json.Linq.JObject)my_obj)
+            {
+                <tr>
+                    <td>
+                        @sub_obj.Key
+                    </td>
+                    <td>
+                        @if (sub_obj.Value.GetType().Name != "JObject")
+                        {
+                            @sub_obj.Value
+                        }
+                        else
+                        {
+                            if (sub_obj.Key == "owner")
+                            {
+                                Newtonsoft.Json.Linq.JObject owner = Newtonsoft.Json.JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JObject>(sub_obj.Value.ToString());
+                                @owner.GetValue("login").ToString();
+                            }
+                            else
+                            {
+                                @sub_obj.Value
+                            }
+                        }
+                    </td>
+                </tr>
+            }
+        }
+    </table>
+</div>
+@Html.ActionLink("Back to List", null, null, null, new { href = Request.UrlReferrer })
