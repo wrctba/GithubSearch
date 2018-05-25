@@ -13,6 +13,7 @@ namespace GitHubSearch.Models
     {
         private readonly string connectionString = string.Format(System.Configuration.ConfigurationManager.ConnectionStrings["GithubSearchDB"].ToString());
         public static int PageSize { get; } = 20;
+        private LanguageDAO languageDAO = new LanguageDAO();
 
         public List<Search> GetAll(int page, out int count)
         {
@@ -20,7 +21,7 @@ namespace GitHubSearch.Models
             count = 0;
             using (SqlConnection con = new SqlConnection(connectionString))
             {
-                SqlCommand cmd = new SqlCommand("SELECT *, count = COUNT(*) OVER() FROM Search ORDER BY date DESC OFFSET @PageSize * (@PageNumber - 1) ROWS FETCH NEXT @PageSize ROWS ONLY; ", con);
+                SqlCommand cmd = new SqlCommand("SELECT id, date, count = COUNT(*) OVER() FROM Search ORDER BY date DESC OFFSET @PageSize * (@PageNumber - 1) ROWS FETCH NEXT @PageSize ROWS ONLY; ", con);
                 cmd.CommandType = CommandType.Text;
 
                 cmd.Parameters.AddWithValue("@PageSize", PageSize);
@@ -35,12 +36,9 @@ namespace GitHubSearch.Models
 
                     search.Id = Convert.ToInt32(rdr["id"]);
                     search.Date = Convert.ToDateTime(rdr["date"]);
-                    search.Asp = Convert.ToBoolean(rdr["asp"]);
-                    search.Php = Convert.ToBoolean(rdr["php"]);
-                    search.C = Convert.ToBoolean(rdr["c"]);
-                    search.Java = Convert.ToBoolean(rdr["java"]);
-                    search.Python = Convert.ToBoolean(rdr["python"]);
-                    count  = Convert.ToInt32(rdr["count"]);
+                    count = Convert.ToInt32(rdr["count"]);
+                    search.Languages = languageDAO.ListSearch(search.Id);
+                    
                     lstSearch.Add(search);
                 }
                 con.Close();
@@ -52,17 +50,11 @@ namespace GitHubSearch.Models
         {
             using (SqlConnection con = new SqlConnection(connectionString))
             {
-                SqlCommand cmd = new SqlCommand("INSERT INTO Search (date, asp, php, c, java, python) OUTPUT INSERTED.ID VALUES (@date, @asp, @php, @c, @java, @python)", con);
+                SqlCommand cmd = new SqlCommand("INSERT INTO Search (date) OUTPUT INSERTED.ID VALUES (@date)", con);
                 cmd.CommandType = CommandType.Text;
 
                 search.Date = DateTime.Now;
-                cmd.Parameters.AddWithValue("@date", search.Date);
-                cmd.Parameters.AddWithValue("@asp", search.Asp);
-                cmd.Parameters.AddWithValue("@php", search.Php);
-                cmd.Parameters.AddWithValue("@c", search.C);
-                cmd.Parameters.AddWithValue("@java", search.Java);
-                cmd.Parameters.AddWithValue("@python", search.Python);
-
+                cmd.Parameters.AddWithValue("@date", search.Date);         
                 con.Open();
                 search.Id = (int)cmd.ExecuteScalar();
                 if (search.Id <= 0)
@@ -117,14 +109,9 @@ namespace GitHubSearch.Models
                 {
                     search = new Search();
                     search.Id = Convert.ToInt32(rdr["id"]);
-                    search.Asp = Convert.ToBoolean(rdr["asp"]);
-                    search.C = Convert.ToBoolean(rdr["c"]);
-                    search.Php  = Convert.ToBoolean(rdr["php"]);
-                    search.Java = Convert.ToBoolean(rdr["java"]);
-                    search.Python = Convert.ToBoolean(rdr["python"]);
+                    search.Languages = languageDAO.ListSearch(search.Id);
                 }
                 rdr.Close();
-
                 if (search != null)
                 {
                     sqlQuery = "SELECT ItemId FROM SearchItem WHERE SearchId = @id";
@@ -133,11 +120,11 @@ namespace GitHubSearch.Models
 
                     cmd.Parameters.AddWithValue("@id", search.Id);
 
-                    rdr = cmd.ExecuteReader();                    
+                    rdr = cmd.ExecuteReader();
 
                     while (rdr.Read())
                     {
-                        ItemDAO itemDAO  = new ItemDAO();
+                        ItemDAO itemDAO = new ItemDAO();
                         Item item = itemDAO.Get(Convert.ToInt32(rdr["ItemId"]));
                         if (search.Items == null)
                             search.Items = new List<Item>();

@@ -6,16 +6,12 @@ namespace GitHubSearch.Controllers
     public class HomeController : Controller
     {
 
+        LanguageDAO languageDAO = new LanguageDAO();
 
-        public ActionResult Index()
+        public ActionResult Index(Search search)
         {
-            return View(new Search());
-        }
-
-        public ActionResult About()
-        {
-            ViewBag.Message = "Your application description page.";
-            return View();
+            search.Languages = languageDAO.GetAll(true);
+            return View(search);
         }
     }
 }

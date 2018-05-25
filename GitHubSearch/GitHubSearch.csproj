@@ -161,6 +161,8 @@
     </Compile>
     <Compile Include="Models\Item.cs" />
     <Compile Include="Models\ItemDAO.cs" />
+    <Compile Include="Models\Language.cs" />
+    <Compile Include="Models\LanguageDAO.cs" />
     <Compile Include="Models\Search.cs" />
     <Compile Include="Models\SearchDAO.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

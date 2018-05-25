@@ -1,28 +1,32 @@
 ﻿@model GitHubSearch.Models.Search
+<script type="text/javascript">
+    $(document).ready(function () { 
+        $('input:checkbox').click(function () {
+            if ($('input:checkbox:checked').length > 0) {
+                $("input:checkbox").removeAttr('required');
+            } else {
+                $("input:checkbox").attr('required', "required");
+            }
+        });
+    });
 
+</script>
 <h2>Home</h2>
 <div align="center">
-    @using (Html.BeginForm("Index", "Search"))
+    @using (Html.BeginForm("Index", "Search", FormMethod.Post))
     {
         @Html.AntiForgeryToken()
-
-        <div class="form-horizontal">
-            
-            <h4>Which languages do you want to search?</h4>
-
-            <div class="form-group center-block">
-                @Html.CheckBoxFor(model => model.Asp)
-                @Html.LabelFor(model => model.Asp)
-                @Html.CheckBoxFor(model => model.Java)
-                @Html.LabelFor(model => model.Java)
-                @Html.CheckBoxFor(model => model.Php)
-                @Html.LabelFor(model => model.Php)
-                @Html.CheckBoxFor(model => model.Python)
-                @Html.LabelFor(model => model.Python)
-                @Html.CheckBoxFor(model => model.C)
-                @Html.LabelFor(model => model.C)
-            </div>
-            <input type="submit" value="Search" class="btn btn-default" />
+        <h4>Which languages do you want to search?</h4>
+        <div class="form-row align-items-center">
+            @for (int i = 0; i < Model.Languages.Count; i++)
+            {
+                <!--<div class="form-check form-check-inline">-->
+                @Html.HiddenFor(model => model.Languages[i].Name)
+                @Html.CheckBoxFor(model => model.Languages[i].IsSelected, new { @type = "checkbox", @required = "required" })
+                @Html.LabelFor(model => model.Languages[i].IsSelected, Model.Languages[i].Name)
+                <!--</div>-->
+            }
         </div>
+        <input type="submit" value="Search" class="btn btn-default" />
     }
 </div>

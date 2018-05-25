@@ -17,38 +17,45 @@ namespace GitHubSearch.Controllers
         private const string _URL = "https://api.github.com/search/repositories";
         private const string _LANG = "?q=language:";
         private const string _SORT = "&sort=stars&order=desc";
-        private const string _TOKEN = "e947df27bb3001daff3062bbf7b9fcfa64f9d766";
+        private const string _TOKEN = "bf89e7f407bd5cdb12205b0b3160af08760d6110";
 
         SearchDAO searchDAO = new SearchDAO();
         ItemDAO itemDAO = new ItemDAO();
+        LanguageDAO languageDAO = new LanguageDAO();
 
         [HttpPost]
         public ActionResult Index([Bind] Models.Search search)
         {
-
-            if (search.Asp)
-                AddLang("ASP", search);
-            if (search.C)
-                AddLang("C", search);
-            if (search.Java)
-                AddLang("JAVA", search);
-            if (search.Php)
-                AddLang("PHP", search);
-            if (search.Python)
-                AddLang("PYTHON", search);
-
-            searchDAO.Add(search);
-            return RedirectToAction("Detail", new { id = search.Id });
-            //return View(search);
+            if (ModelState.IsValid)
+            {
+                foreach (Language lang in search.Languages)
+                {
+                    if (lang.IsSelected)
+                    {
+                        Item item = GetItem(lang.Name);
+                        if (item != null)
+                        {
+                            if (search.Items == null)
+                            {
+                                search.Items = new List<Item>();
+                            }
+                            search.Items.Add(item);
+                        }
+                    }
+                }
+                searchDAO.Add(search);
+                return RedirectToAction("Detail", new { id = search.Id });
+            }
+            return RedirectToAction("Index", "Home");
         }
 
-        private void AddLang(string lang, GitHubSearch.Models.Search search)
+        private Item GetItem(string lang)
         {
             HttpClient client = new HttpClient();
             client.BaseAddress = new Uri(_URL);
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token", _TOKEN);
-            client.DefaultRequestHeaders.Add("User-Agent", "GithubSearch");
+            client.DefaultRequestHeaders.Add("User-Agent", "GitHubSearch");
 
             string urlParameters = _LANG + lang + _SORT;
             HttpResponseMessage response = client.GetAsync(urlParameters).Result;
@@ -66,16 +73,15 @@ namespace GitHubSearch.Controllers
                     item.Language = ret.SelectToken("language").Value<string>();
                     item.Description = ret.SelectToken("description").Value<string>();
                     item.Details = ret.ToString();
-                    if (search.Items == null)
-                        search.Items = new List<Models.Item>();
-                    search.Items.Add(item);
-                    break;
+                    return item;
                 }
             }
+            return null;
         }
 
         public ActionResult List(int? page)
         {
+            ViewBag.Languages = languageDAO.GetAll(true);
             int pagenumber = (page ?? 1);
             int count = 0;
             List<Search> list = searchDAO.GetAll(pagenumber, out count);
