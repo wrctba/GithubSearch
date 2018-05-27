@@ -26,12 +26,14 @@ namespace GitHubSearch.Controllers
         [HttpPost]
         public ActionResult Index([Bind] Models.Search search)
         {
-            if (ModelState.IsValid)
+            if (ModelState.IsValid && search.Languages != null)
             {
+                int count = 0;
                 foreach (Language lang in search.Languages)
                 {
                     if (lang.IsSelected)
                     {
+                        count++;
                         Item item = GetItem(lang.Name);
                         if (item != null)
                         {
@@ -43,10 +45,12 @@ namespace GitHubSearch.Controllers
                         }
                     }
                 }
-                searchDAO.Add(search);
-                return RedirectToAction("Detail", new { id = search.Id });
+                if (count >= 1) { 
+                    searchDAO.Add(search);
+                    return RedirectToAction("Detail", "Search", new { id = search.Id });
+                }
             }
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("Index", "Home"); ;
         }
 
         private Item GetItem(string lang)
@@ -82,7 +86,7 @@ namespace GitHubSearch.Controllers
         public ActionResult List(int? page)
         {
             ViewBag.Languages = languageDAO.GetAll(true);
-            int pagenumber = (page ?? 1);
+            int pagenumber = (page == null ? 1 : (page <= 0 ? 1 : (int)page));
             int count = 0;
             List<Search> list = searchDAO.GetAll(pagenumber, out count);
             IPagedList<Search> pageOrders = new StaticPagedList<Search>(list, pagenumber, SearchDAO.PageSize, count);

@@ -9,9 +9,8 @@ using PagedList;
 
 namespace GitHubSearch.Models
 {
-    public class SearchDAO
+    public class SearchDAO : BaseDAO
     {
-        private readonly string connectionString = string.Format(System.Configuration.ConfigurationManager.ConnectionStrings["GithubSearchDB"].ToString());
         public static int PageSize { get; } = 20;
         private LanguageDAO languageDAO = new LanguageDAO();
 
@@ -19,7 +18,7 @@ namespace GitHubSearch.Models
         {
             List<Search> lstSearch = new List<Search>();
             count = 0;
-            using (SqlConnection con = new SqlConnection(connectionString))
+            using (SqlConnection con = new SqlConnection(_connectionString))
             {
                 SqlCommand cmd = new SqlCommand("SELECT id, date, count = COUNT(*) OVER() FROM Search ORDER BY date DESC OFFSET @PageSize * (@PageNumber - 1) ROWS FETCH NEXT @PageSize ROWS ONLY; ", con);
                 cmd.CommandType = CommandType.Text;
@@ -30,16 +29,27 @@ namespace GitHubSearch.Models
                 con.Open();
                 SqlDataReader rdr = cmd.ExecuteReader();
 
-                while (rdr.Read())
+                try
                 {
-                    Search search = new Search();
+                    while (rdr.Read())
+                    {
+                        Search search = new Search();
 
-                    search.Id = Convert.ToInt32(rdr["id"]);
-                    search.Date = Convert.ToDateTime(rdr["date"]);
-                    count = Convert.ToInt32(rdr["count"]);
-                    search.Languages = languageDAO.ListSearch(search.Id);
-                    
-                    lstSearch.Add(search);
+                        search.Id = Convert.ToInt32(rdr["id"]);
+                        search.Date = Convert.ToDateTime(rdr["date"]);
+                        count = Convert.ToInt32(rdr["count"]);
+                        search.Languages = languageDAO.ListSearch(search.Id);
+
+                        lstSearch.Add(search);
+                    }
+                }
+                catch (Exception e)
+                {
+                    System.Console.Write(e.StackTrace);
+                }
+                finally
+                {
+                    rdr.Close();
                 }
                 con.Close();
             }
@@ -48,7 +58,7 @@ namespace GitHubSearch.Models
 
         public void Add(Search search)
         {
-            using (SqlConnection con = new SqlConnection(connectionString))
+            using (SqlConnection con = new SqlConnection(_connectionString))
             {
                 SqlCommand cmd = new SqlCommand("INSERT INTO Search (date) OUTPUT INSERTED.ID VALUES (@date)", con);
                 cmd.CommandType = CommandType.Text;
@@ -94,7 +104,7 @@ namespace GitHubSearch.Models
         public Search Get(int id)
         {
             Search search = null;
-            using (SqlConnection con = new SqlConnection(connectionString))
+            using (SqlConnection con = new SqlConnection(_connectionString))
             {
                 string sqlQuery = "SELECT * FROM Search WHERE id = @id";
                 SqlCommand cmd = new SqlCommand(sqlQuery, con);
@@ -105,13 +115,22 @@ namespace GitHubSearch.Models
                 con.Open();
                 SqlDataReader rdr = cmd.ExecuteReader();
                 
+                try { 
                 while (rdr.Read())
                 {
                     search = new Search();
                     search.Id = Convert.ToInt32(rdr["id"]);
                     search.Languages = languageDAO.ListSearch(search.Id);
                 }
-                rdr.Close();
+                }
+                catch (Exception e)
+                {
+                    System.Console.Write(e.StackTrace);
+                }
+                finally
+                {
+                    rdr.Close();
+                }
                 if (search != null)
                 {
                     sqlQuery = "SELECT ItemId FROM SearchItem WHERE SearchId = @id";
@@ -122,13 +141,24 @@ namespace GitHubSearch.Models
 
                     rdr = cmd.ExecuteReader();
 
-                    while (rdr.Read())
+                    try
                     {
-                        ItemDAO itemDAO = new ItemDAO();
-                        Item item = itemDAO.Get(Convert.ToInt32(rdr["ItemId"]));
-                        if (search.Items == null)
-                            search.Items = new List<Item>();
-                        search.Items.Add(item);
+                        while (rdr.Read())
+                        {
+                            ItemDAO itemDAO = new ItemDAO();
+                            Item item = itemDAO.Get(Convert.ToInt32(rdr["ItemId"]));
+                            if (search.Items == null)
+                                search.Items = new List<Item>();
+                            search.Items.Add(item);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        System.Console.Write(e.StackTrace);
+                    }
+                    finally
+                    {
+                        rdr.Close();
                     }
                     rdr.Close();
                 }
@@ -139,7 +169,7 @@ namespace GitHubSearch.Models
 
         public bool Delete(int id)
         {
-            using (SqlConnection con = new SqlConnection(connectionString))
+            using (SqlConnection con = new SqlConnection(_connectionString))
             {
                 SqlCommand cmd = new SqlCommand("DELETE SearchItem WHERE SearchId = @id; DELETE Search WHERE id = @id", con);
                 cmd.CommandType = CommandType.Text;

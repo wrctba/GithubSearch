@@ -7,13 +7,11 @@ using System.Web;
 
 namespace GitHubSearch.Models
 {
-    public class ItemDAO
+    public class ItemDAO : BaseDAO
     {
-        private readonly string connectionString = string.Format(System.Configuration.ConfigurationManager.ConnectionStrings["GithubSearchDB"].ToString());
-
         public void Add(Item item)
         {
-            using (SqlConnection con = new SqlConnection(connectionString))
+            using (SqlConnection con = new SqlConnection(_connectionString))
             {
                 SqlCommand cmd = new SqlCommand("INSERT INTO ITEM (id, name, owner, description, language, details) VALUES (@id, @name, @owner, @description, @language, @details)", con);
                 cmd.CommandType = CommandType.Text;
@@ -37,7 +35,7 @@ namespace GitHubSearch.Models
 
         public void Update(Item item)
         {
-            using (SqlConnection con = new SqlConnection(connectionString))
+            using (SqlConnection con = new SqlConnection(_connectionString))
             {
                 SqlCommand cmd = new SqlCommand("UPDATE ITEM SET name = @name, owner = @owner, description = @description, language = @language, details = @details WHERE id = @id", con);
                 cmd.CommandType = CommandType.Text;
@@ -62,7 +60,7 @@ namespace GitHubSearch.Models
         public Item Get(int id)
         {
             Item item = null;
-            using (SqlConnection con = new SqlConnection(connectionString))
+            using (SqlConnection con = new SqlConnection(_connectionString))
             {
                 string sqlQuery = "SELECT * FROM Item WHERE id = @id";
                 SqlCommand cmd = new SqlCommand(sqlQuery, con);
@@ -73,6 +71,7 @@ namespace GitHubSearch.Models
                 con.Open();
                 SqlDataReader rdr = cmd.ExecuteReader();
 
+                try { 
                 while (rdr.Read())
                 {
                     item = new Item();
@@ -83,7 +82,15 @@ namespace GitHubSearch.Models
                     item.Language = rdr["language"].ToString();
                     item.Details = rdr["details"].ToString();
                 }
-                rdr.Close();
+                }
+                catch (Exception e)
+                {
+                    System.Console.Write(e.StackTrace);
+                }
+                finally
+                {
+                    rdr.Close();
+                }
                 con.Close();
             }
             return item;

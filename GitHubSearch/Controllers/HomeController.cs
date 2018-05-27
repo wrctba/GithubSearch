@@ -8,8 +8,9 @@ namespace GitHubSearch.Controllers
 
         LanguageDAO languageDAO = new LanguageDAO();
 
-        public ActionResult Index(Search search)
+        public ActionResult Index()
         {
+            Search search = new Search();
             search.Languages = languageDAO.GetAll(true);
             return View(search);
         }

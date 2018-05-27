@@ -27,22 +27,25 @@ namespace GitHubSearch.Models
     {
         public int Id { get; set; }
         public DateTime Date { get; set; }
-
         public List<Item> Items { get; set; }
-
         [AtLanguageMustBeChecked(ErrorMessage = "Please select at least one language")]
         public List<Language> Languages { get; set; }
-        /*[Display(Name = "ASP")]
-        public bool Asp { get; set; }
-        [Display(Name = "Java")]
-        public bool Java { get; set; }
-        [Display(Name = "Python")]
-        public bool Python { get; set; }
-        [Display(Name = "PHP")]
-        public bool Php { get; set; }
-        [Display(Name = "C")]
-        public bool C { get; set; }*/
 
-        
+        public override bool Equals(Object obj)
+        {
+            if (obj == null || this.GetType() != obj.GetType())
+                return false;
+
+            Search o = (Search)obj;
+            return (o.Id == this.Id);
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = -1190849415;
+            hashCode = hashCode * -1521134295 + Id.GetHashCode();
+            hashCode = hashCode * -1521134295 + Date.GetHashCode();
+            return hashCode;
+        }
     }
 }

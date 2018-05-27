@@ -7,14 +7,12 @@ using System.Web;
 
 namespace GitHubSearch.Models
 {
-    public class LanguageDAO
+    public class LanguageDAO : BaseDAO
     {
-        private readonly string connectionString = string.Format(System.Configuration.ConfigurationManager.ConnectionStrings["GithubSearchDB"].ToString());
-
         public List<Language> ListSearch(int searchId)
         {
             List<Language> lstLanguage = new List<Language>();
-            using (SqlConnection con = new SqlConnection(connectionString))
+            using (SqlConnection con = new SqlConnection(_connectionString))
             {
                 SqlCommand cmd = new SqlCommand("select Item.language as name from SearchItem, Item  where SearchItem.ItemId = Item.id AND SearchItem.SearchId = @searchId ORDER BY Item.language ASC", con);
                 cmd.CommandType = CommandType.Text;
@@ -23,12 +21,22 @@ namespace GitHubSearch.Models
 
                 con.Open();
                 SqlDataReader rdr = cmd.ExecuteReader();
-
-                while (rdr.Read())
+                 
+                try {
+                    while (rdr.Read())
+                    {
+                        Language language = new Language();
+                        language.Name = rdr["name"].ToString();
+                        lstLanguage.Add(language);
+                    }
+                }
+                catch (Exception e)
                 {
-                    Language language = new Language();
-                    language.Name = rdr["name"].ToString();
-                    lstLanguage.Add(language);
+                    System.Console.Write(e.StackTrace);
+                }
+                finally
+                {
+                    rdr.Close();
                 }
                 con.Close();
             }
@@ -38,7 +46,7 @@ namespace GitHubSearch.Models
         public List<Language> GetAll(bool? justActive = true)
         {
             List<Language> lstLanguage = new List<Language>();
-            using (SqlConnection con = new SqlConnection(connectionString))
+            using (SqlConnection con = new SqlConnection(_connectionString))
             {
                 SqlCommand cmd = new SqlCommand("SELECT name, active FROM Language WHERE ((active = 1 AND @justActive = 1) OR @justActive = 0) ORDER BY Name ASC", con);
                 cmd.CommandType = CommandType.Text;
@@ -48,13 +56,23 @@ namespace GitHubSearch.Models
                 con.Open();
                 SqlDataReader rdr = cmd.ExecuteReader();
 
-                while (rdr.Read())
-                {
-                    Language language = new Language();
+                try { 
+                    while (rdr.Read())
+                    {
+                        Language language = new Language();
 
-                    language.Name = rdr["name"].ToString();
-                    language.IsActive = Convert.ToBoolean(rdr["active"]);
-                    lstLanguage.Add(language);
+                        language.Name = rdr["name"].ToString();
+                        language.IsActive = Convert.ToBoolean(rdr["active"]);
+                        lstLanguage.Add(language);
+                    }
+                }
+                catch (Exception e)
+                {
+                    System.Console.Write(e.StackTrace);
+                }
+                finally
+                {
+                    rdr.Close();
                 }
                 con.Close();
             }
@@ -64,7 +82,7 @@ namespace GitHubSearch.Models
         public Language Get(int id)
         {
             Language language = null;
-            using (SqlConnection con = new SqlConnection(connectionString))
+            using (SqlConnection con = new SqlConnection(_connectionString))
             {
                 string sqlQuery = "SELECT name, active FROM Language WHERE id = @id";
                 SqlCommand cmd = new SqlCommand(sqlQuery, con);

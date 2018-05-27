@@ -6,6 +6,7 @@ using System.Web.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using GitHubSearch;
 using GitHubSearch.Controllers;
+using GitHubSearch.Models;
 
 namespace GitHubSearch.Tests.Controllers
 {
@@ -23,20 +24,9 @@ namespace GitHubSearch.Tests.Controllers
 
             // Assert
             Assert.IsNotNull(result);
+            Assert.IsInstanceOfType(result.Model, typeof(Search));
+            Assert.IsNotNull(((Search)result.Model).Languages);
+            Assert.IsTrue(((Search)result.Model).Languages.Count > 0);
         }
-
-        [TestMethod]
-        public void About()
-        {
-            // Arrange
-            HomeController controller = new HomeController();
-
-            // Act
-            ViewResult result = controller.About() as ViewResult;
-
-            // Assert
-            Assert.AreEqual("Your application description page.", result.ViewBag.Message);
-        }
-
     }
 }
